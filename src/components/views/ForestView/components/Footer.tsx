@@ -8,7 +8,7 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import { Box, Button, Divider, Stack } from "@mui/joy";
 
 import { addPlayer, setCave } from "@/actions/game";
-import AddPlayerModal from "@/components/common/AddPlayerModal";
+import AddPlayerDrawer from "@/components/common/AddPlayerDrawer";
 import GameContext from "@/components/contexts/GameContext";
 import { Cave } from "@/game";
 import { MAX_PLAYERS } from "@/utils/constants";
@@ -19,9 +19,9 @@ const Footer = () => {
   const { game, playerId, dispatch } = useContext(GameContext);
 
   const {
-    value: isAddPlayerModalOpen,
-    setTrue: openAddPlayerModal,
-    setFalse: closeAddPlayerModal,
+    value: isAddPlayerDrawerOpen,
+    setTrue: openAddPlayerDrawer,
+    setFalse: closeAddPlayerDrawer,
   } = useBoolean(false);
 
   const hasMaxPlayers = game?.players?.length === MAX_PLAYERS;
@@ -61,7 +61,7 @@ const Footer = () => {
           color="neutral"
           startDecorator={<PersonAddIcon />}
           disabled={hasMaxPlayers}
-          onClick={openAddPlayerModal}
+          onClick={openAddPlayerDrawer}
         >
           <FormattedMessage
             id="ForestView.Footer.nextPlayer"
@@ -83,11 +83,11 @@ const Footer = () => {
       </Stack>
 
       {game && (
-        <AddPlayerModal
-          open={isAddPlayerModalOpen}
+        <AddPlayerDrawer
+          open={isAddPlayerDrawerOpen}
           game={game}
-          onConfirm={(values) => dispatch(addPlayer(values))}
-          onClose={closeAddPlayerModal}
+          onCreate={(values) => dispatch(addPlayer(values))}
+          onClose={closeAddPlayerDrawer}
         />
       )}
     </Box>
