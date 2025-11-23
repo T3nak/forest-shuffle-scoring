@@ -1,13 +1,11 @@
-import { useContext, useEffect, useState } from "react";
-import { FormattedMessage } from "react-intl";
+import { useContext, useEffect } from "react";
+import { FormProvider, useForm, useWatch } from "react-hook-form";
 import { useLocalStorage } from "usehooks-ts";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import { Button, Stack } from "@mui/joy";
+import { Stack } from "@mui/joy";
 
 import { createGame } from "@/actions/game";
-import { AddPlayerFormFields } from "@/components/common/AddPlayerForm";
 import AppUpdateModal from "@/components/common/AppUpdateModal";
 import View from "@/components/common/View";
 import AppUpdateContext from "@/components/contexts/AppUpdateContext";
@@ -15,64 +13,64 @@ import GameContext from "@/components/contexts/GameContext";
 import { GameBox } from "@/game";
 import { ScoringMode } from "@/types";
 
-import GameBoxesSection from "./components/GameBoxesSection";
+import CreateGameForm from "./components/CreateGameForm";
+import Footer from "./components/Footer";
 import Header from "./components/Header";
-import PlayerSection from "./components/PlayerSection";
 import ScoringModeSection from "./components/ScoringModeSection";
+import { CreateGameFormFields } from "./types";
 
 const CreateGameView = () => {
   const [, navigate] = useLocation();
   const { dispatch } = useContext(GameContext);
   const { checkForUpdate } = useContext(AppUpdateContext);
 
-  const [scoringMode, setScoringMode] = useState<ScoringMode>(ScoringMode.Host);
-  const [gameBoxes, setGameBoxes] = useLocalStorage<GameBox[]>("gameBoxes", [
-    GameBox.Base,
-  ]);
+  const [defaultGameBoxes, persistGameBoxes] = useLocalStorage<GameBox[]>(
+    "gameBoxes",
+    [GameBox.Base],
+  );
+  const form = useForm<CreateGameFormFields>({
+    mode: "onChange",
+    defaultValues: {
+      gameBoxes: defaultGameBoxes,
+      scoringMode: ScoringMode.Host,
+      playerName: "",
+      caveName: "REGULAR_CAVE",
+      caveCardCount: 0,
+    },
+  });
+  const { control, setValue, handleSubmit } = form;
+  const scoringMode = useWatch({ control, name: "scoringMode" });
 
   useEffect(() => {
     const handle = setTimeout(() => checkForUpdate(), 1000);
     return () => clearTimeout(handle);
   }, [checkForUpdate]);
 
-  const handleSubmit = (values: AddPlayerFormFields) => {
-    dispatch(createGame({ scoringMode, gameBoxes, ...values }));
+  const handleCreate = (values: CreateGameFormFields) => {
+    persistGameBoxes(values.gameBoxes);
+    dispatch(createGame(values));
     navigate("/forest");
   };
 
   return (
-    <View header={<Header />}>
-      <Stack
-        direction="column"
-        justifyContent="space-between"
-        gap={5}
-        sx={{ minHeight: "100%" }}
-      >
-        <Stack gap={3}>
-          <ScoringModeSection
-            scoringMode={scoringMode}
-            onChange={setScoringMode}
-          />
-          <GameBoxesSection gameBoxes={gameBoxes} onChange={setGameBoxes} />
-          <PlayerSection
-            scoringMode={scoringMode}
-            gameBoxes={gameBoxes}
-            onSubmit={handleSubmit}
-          />
-        </Stack>
+    <View
+      header={<Header />}
+      footer={
+        <Footer
+          canCreate={form.formState.isValid}
+          onCreate={handleSubmit(handleCreate)}
+        />
+      }
+    >
+      <Stack direction="column" gap={2}>
+        <ScoringModeSection
+          scoringMode={scoringMode}
+          onChange={(value) => setValue("scoringMode", value)}
+        />
 
-        <Button
-          variant="plain"
-          color="primary"
-          startDecorator={<InfoOutlinedIcon />}
-          component={Link}
-          to="/about"
-        >
-          <FormattedMessage
-            id="CreateGameView.about"
-            defaultMessage="About this app"
-          />
-        </Button>
+        <FormProvider {...form}>
+          <CreateGameForm onSubmit={handleSubmit(handleCreate)} />
+        </FormProvider>
       </Stack>
 
       <AppUpdateModal />
