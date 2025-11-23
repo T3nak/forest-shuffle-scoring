@@ -1,9 +1,10 @@
-import { useCallback, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { FormattedMessage, defineMessages, useIntl } from "react-intl";
 
 import { Box, Button, Stack, Typography } from "@mui/joy";
 
 import QrCodeScanner from "@/components/common/QrCodeScanner";
+import AnalyticsContext from "@/components/contexts/AnalyticsContext";
 import { Game, Player } from "@/game";
 import {
   ErrorPlayerImportResult,
@@ -44,6 +45,7 @@ interface ImportPaneProps {
 
 const ImportPane = ({ game, isActive, onSubmit }: ImportPaneProps) => {
   const intl = useIntl();
+  const { trackEvent } = useContext(AnalyticsContext);
 
   const [errorResult, setErrorResult] =
     useState<ErrorPlayerImportResult | null>(null);
@@ -52,12 +54,14 @@ const ImportPane = ({ game, isActive, onSubmit }: ImportPaneProps) => {
     (data: string) => {
       const importResult = importPlayer(game, data);
       if (importResult.success) {
+        trackEvent("import-player-success");
         onSubmit(importResult.player);
       } else {
+        trackEvent("import-player-failure");
         setErrorResult(importResult);
       }
     },
-    [game, onSubmit],
+    [game, onSubmit, trackEvent],
   );
 
   const hasUnavailableCards =

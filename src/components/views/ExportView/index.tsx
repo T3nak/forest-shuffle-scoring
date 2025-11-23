@@ -1,9 +1,10 @@
-import { useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 
 import { Stack } from "@mui/joy";
 
 import ResponsiveQrCode from "@/components/common/ResponsiveQrCode";
 import View from "@/components/common/View";
+import AnalyticsContext from "@/components/contexts/AnalyticsContext";
 import { encodePlayer } from "@/game/sharing";
 import { requireGame } from "@/utils/hoc";
 
@@ -12,6 +13,12 @@ import Header from "./components/Header";
 import InstructionsCard from "./components/InstructionsCard";
 
 const ExportView = requireGame(({ game }) => {
+  const { trackEvent } = useContext(AnalyticsContext);
+
+  useEffect(() => {
+    trackEvent("export-player");
+  }, [trackEvent]);
+
   const encodedPlayer = useMemo(
     () => encodePlayer(game, game.players[0]),
     [game],

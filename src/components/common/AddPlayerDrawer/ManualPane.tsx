@@ -1,5 +1,5 @@
 import * as _ from "lodash-es";
-import { useEffect, useMemo } from "react";
+import { useContext, useEffect, useMemo } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { FormattedMessage } from "react-intl";
 
@@ -8,6 +8,7 @@ import { Button, Stack, Typography } from "@mui/joy";
 import AddPlayerForm, {
   AddPlayerFormFields,
 } from "@/components/common/AddPlayerForm";
+import AnalyticsContext from "@/components/contexts/AnalyticsContext";
 import { Game, Player, createPlayer } from "@/game";
 
 interface ManualPaneProps {
@@ -17,6 +18,8 @@ interface ManualPaneProps {
 }
 
 const ManualPane = ({ game, isActive, onSubmit }: ManualPaneProps) => {
+  const { trackEvent } = useContext(AnalyticsContext);
+
   const form = useForm<AddPlayerFormFields>({
     mode: "onChange",
     defaultValues: {
@@ -51,6 +54,8 @@ const ManualPane = ({ game, isActive, onSubmit }: ManualPaneProps) => {
       ...cave,
       cardCount: values.caveCardCount,
     });
+
+    trackEvent("add-player-manual");
     onSubmit(player);
   };
 
