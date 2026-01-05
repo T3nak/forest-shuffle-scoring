@@ -34,12 +34,20 @@ const getOptions = <TCard extends Card, TValue extends string>(
   cards: TCard[],
   valueSelector: (card: TCard) => TValue | null | undefined,
   messageSelector: (value: TValue) => string,
-  filters: { cardName?: string; gameBox?: GameBox } = {},
+  filters: {
+    cardName?: string;
+    treeSymbol?: TreeSymbol | null;
+    gameBox?: GameBox;
+  } = {},
 ) => {
-  const matchingCards = cards
-    .filter((c) => !("cardName" in filters) || c.name === filters.cardName)
-    .filter((c) => !("gameBox" in filters) || c.gameBox === filters.gameBox)
-    .filter((c) => !!valueSelector(c));
+  const { cardName, treeSymbol, gameBox } = filters;
+  const matchingCards = cards.filter(
+    (c) =>
+      !!valueSelector(c) &&
+      (cardName === undefined || c.name === cardName) &&
+      (treeSymbol === undefined || c.treeSymbol === treeSymbol) &&
+      (gameBox === undefined || c.gameBox === gameBox),
+  );
 
   return _.orderBy(_.uniqBy(matchingCards, valueSelector), (c) =>
     messageSelector(valueSelector(c)!),
@@ -74,8 +82,8 @@ interface CardSelectProps<TCard extends Card> {
   onCardNameChange: (value?: string) => void;
   gameBox?: GameBox;
   onGameBoxChange: (value?: GameBox) => void;
-  treeSymbol?: TreeSymbol;
-  onTreeSymbolChange: (value?: TreeSymbol) => void;
+  treeSymbol?: TreeSymbol | null;
+  onTreeSymbolChange: (value?: TreeSymbol | null) => void;
   onSelect?: (value: TCard) => void;
   canRemove?: boolean;
   onRemove?: () => void;
@@ -112,36 +120,42 @@ const CardSelect = <TCard extends Card>({
     (t) => intl.formatMessage(CardTypeMessages[t].plural),
   );
 
-  const gameBoxOptions = getOptions(
-    cards,
-    (c) => c.gameBox,
-    (g) => intl.formatMessage(GameBoxMessages[g]),
-    { cardName },
-  );
-  const canSelectGameBox = cardName && gameBoxOptions.length > 1;
-
   const treeSymbolOptions = getOptions(
     cards,
     (c) => c.treeSymbol,
     (t) => intl.formatMessage(TreeSymbolMessages[t]),
-    { cardName, gameBox },
+    { cardName },
   );
-  const canSelectTreeSymbol = gameBox && treeSymbolOptions.length > 1;
+  const canSelectTreeSymbol = cardName && treeSymbolOptions.length > 1;
+
+  const gameBoxOptions = getOptions(
+    cards,
+    (c) => c.gameBox,
+    (g) => intl.formatMessage(GameBoxMessages[g]),
+    { cardName, treeSymbol },
+  );
+  const canSelectGameBox =
+    treeSymbol !== undefined && gameBoxOptions.length > 1;
 
   useEffect(() => {
     if (cardName && !cards.some((c) => c.name === cardName)) {
       onCardNameChange(undefined);
-      onGameBoxChange(undefined);
       onTreeSymbolChange(undefined);
+      onGameBoxChange(undefined);
     }
   }, [cards, cardName, onCardNameChange, onGameBoxChange, onTreeSymbolChange]);
 
   const handleSelect = (
     newCardName: string,
-    newGameBox?: GameBox,
     newTreeSymbol?: TreeSymbol | null,
+    newGameBox?: GameBox,
   ) => {
     let candidates = cards.filter((c) => c.name === newCardName);
+
+    newTreeSymbol = newTreeSymbol ?? getUnique(candidates, (c) => c.treeSymbol);
+    if (newTreeSymbol) {
+      candidates = candidates.filter((c) => c.treeSymbol === newTreeSymbol);
+    }
 
     newGameBox =
       newGameBox ??
@@ -151,25 +165,19 @@ const CardSelect = <TCard extends Card>({
       candidates = candidates.filter((c) => c.gameBox === newGameBox);
     }
 
-    newTreeSymbol = newTreeSymbol ?? getUnique(candidates, (c) => c.treeSymbol);
-    if (newTreeSymbol) {
-      candidates = candidates.filter((c) => c.treeSymbol === newTreeSymbol);
-    }
-    const hasNoTreeSymbols = candidates.every((c) => !c.treeSymbol);
-
     if (newCardName !== cardName) {
       onCardNameChange(newCardName);
     }
-    if (newGameBox && newGameBox !== gameBox) {
+    if (newTreeSymbol !== undefined && newTreeSymbol !== treeSymbol) {
+      onTreeSymbolChange(newTreeSymbol);
+    }
+    if (newGameBox !== undefined && newGameBox !== gameBox) {
       onGameBoxChange(newGameBox);
     }
-    if ((hasNoTreeSymbols || newTreeSymbol) && newTreeSymbol !== treeSymbol) {
-      onTreeSymbolChange(treeSymbol);
-    }
     if (
-      newCardName &&
-      newGameBox &&
-      (hasNoTreeSymbols || newTreeSymbol) &&
+      newCardName !== undefined &&
+      newTreeSymbol !== undefined &&
+      newGameBox !== undefined &&
       candidates.length > 0
     ) {
       onSelect?.(candidates[0]);
@@ -182,25 +190,25 @@ const CardSelect = <TCard extends Card>({
 
   const handleResetCardName = () => {
     onCardNameChange(undefined);
+    onTreeSymbolChange(undefined);
+    onGameBoxChange(undefined);
+  };
+
+  const handleSelectTreeSymbol = (value: TCard) => {
+    handleSelect(value.name, value.treeSymbol);
+  };
+
+  const handleResetTreeSymbol = () => {
     onGameBoxChange(undefined);
     onTreeSymbolChange(undefined);
   };
 
   const handleSelectGameBox = (value: TCard) => {
-    handleSelect(value.name, value.gameBox);
+    handleSelect(value.name, value.treeSymbol, value.gameBox);
   };
 
   const handleResetGameBox = () => {
     onGameBoxChange(undefined);
-    onTreeSymbolChange(undefined);
-  };
-
-  const handleSelectTreeSymbol = (value: TCard) => {
-    handleSelect(value.name, value.gameBox, value.treeSymbol);
-  };
-
-  const handleResetTreeSymbol = () => {
-    onTreeSymbolChange(undefined);
   };
 
   return (
@@ -258,40 +266,6 @@ const CardSelect = <TCard extends Card>({
           </List>
         )}
 
-        {canSelectGameBox && (
-          <>
-            <Typography level="title-sm">
-              <FormattedMessage
-                id="CardSelect.header.expansion"
-                defaultMessage="Expansion"
-              />
-            </Typography>
-            {gameBox ? (
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-              >
-                <Typography level="body-sm">
-                  {intl.formatMessage(GameBoxMessages[gameBox])}
-                </Typography>
-                <IconButton size="sm" onClick={handleResetGameBox}>
-                  <EditIcon />
-                </IconButton>
-              </Stack>
-            ) : (
-              gameBoxOptions.map((card) => (
-                <ExpansionButton
-                  key={card.gameBox}
-                  size="sm"
-                  gameBox={card.gameBox}
-                  onClick={() => handleSelectGameBox(card)}
-                />
-              ))
-            )}
-          </>
-        )}
-
         {canSelectTreeSymbol && (
           <>
             <Typography level="title-sm">
@@ -320,6 +294,40 @@ const CardSelect = <TCard extends Card>({
                   size="sm"
                   treeSymbol={card.treeSymbol!}
                   onClick={() => handleSelectTreeSymbol(card)}
+                />
+              ))
+            )}
+          </>
+        )}
+
+        {canSelectGameBox && (
+          <>
+            <Typography level="title-sm">
+              <FormattedMessage
+                id="CardSelect.header.expansion"
+                defaultMessage="Expansion"
+              />
+            </Typography>
+            {gameBox ? (
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography level="body-sm">
+                  {intl.formatMessage(GameBoxMessages[gameBox])}
+                </Typography>
+                <IconButton size="sm" onClick={handleResetGameBox}>
+                  <EditIcon />
+                </IconButton>
+              </Stack>
+            ) : (
+              gameBoxOptions.map((card) => (
+                <ExpansionButton
+                  key={card.gameBox}
+                  size="sm"
+                  gameBox={card.gameBox}
+                  onClick={() => handleSelectGameBox(card)}
                 />
               ))
             )}
