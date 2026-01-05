@@ -36,7 +36,7 @@ const meta = {
         setArgs({ gameBox: value });
       };
 
-      const handleTreeSymbolChange = (value?: TreeSymbol) => {
+      const handleTreeSymbolChange = (value?: TreeSymbol | null) => {
         ctx.args.onTreeSymbolChange?.(value);
         setArgs({ treeSymbol: value });
       };

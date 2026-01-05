@@ -32,7 +32,7 @@ const CardDrawer = <TCard extends Card>({
   const [gameBox, setGameBox] = useState<GameBox | undefined>(
     selectedCard?.gameBox,
   );
-  const [treeSymbol, setTreeSymbol] = useState<TreeSymbol | undefined>(
+  const [treeSymbol, setTreeSymbol] = useState<TreeSymbol | null | undefined>(
     selectedCard?.treeSymbol,
   );
 

@@ -61,7 +61,7 @@ export interface Card {
   countsAs?: string;
   gameBox: GameBox;
   types: CardType[];
-  treeSymbol?: TreeSymbol;
+  treeSymbol: TreeSymbol | null;
   isPartOfDeck: boolean;
 }
 
@@ -149,7 +149,7 @@ export interface WoodyPlantCardBlueprint extends CardBlueprint {
 
 export interface WoodyPlantVariant {
   gameBox: GameBox;
-  treeSymbol?: TreeSymbol;
+  treeSymbol: TreeSymbol | null;
   extraTypes?: CardType[];
   count: number;
 }

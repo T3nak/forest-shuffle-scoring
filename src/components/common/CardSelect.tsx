@@ -32,7 +32,7 @@ import TreeSymbolMessages from "@/translations/messages/TreeSymbols";
 
 const getOptions = <TCard extends Card, TValue extends string>(
   cards: TCard[],
-  valueSelector: (card: TCard) => TValue | undefined,
+  valueSelector: (card: TCard) => TValue | null | undefined,
   messageSelector: (value: TValue) => string,
   filters: { cardName?: string; gameBox?: GameBox } = {},
 ) => {
@@ -139,7 +139,7 @@ const CardSelect = <TCard extends Card>({
   const handleSelect = (
     newCardName: string,
     newGameBox?: GameBox,
-    newTreeSymbol?: TreeSymbol,
+    newTreeSymbol?: TreeSymbol | null,
   ) => {
     let candidates = cards.filter((c) => c.name === newCardName);
 

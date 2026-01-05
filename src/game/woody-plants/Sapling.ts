@@ -8,7 +8,13 @@ const blueprint: WoodyPlantCardBlueprint = {
   types: [CardType.Tree],
   cost: 0,
   isPartOfDeck: false,
-  variants: [{ gameBox: GameBox.Base, count: Infinity }],
+  variants: [
+    {
+      gameBox: GameBox.Base,
+      treeSymbol: null,
+      count: Infinity,
+    },
+  ],
   score: () => points,
 };
 

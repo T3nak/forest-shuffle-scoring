@@ -45,7 +45,7 @@ export const createFakeDweller: (
     id,
     gameBox = GameBox.Base,
     types = [CardType.Amphibian],
-    treeSymbol,
+    treeSymbol = null,
     modifiers,
     isPartOfDeck = true,
     uniqueName = true,
@@ -75,7 +75,7 @@ export const createFakeWoodyPlant: (
 ) => WoodyPlantCard = ({
   gameBox = GameBox.Base,
   types = [CardType.Tree],
-  treeSymbol,
+  treeSymbol = null,
   isPartOfDeck = true,
   uniqueName = true,
 } = {}) => ({

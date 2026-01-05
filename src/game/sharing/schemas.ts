@@ -5,14 +5,14 @@ import { DwellerPosition, GameBox, TreeSymbol } from "@/game/types";
 export const DwellerCardDtoSchema = z.object({
   name: z.string(),
   gameBox: z.enum(GameBox),
-  treeSymbol: z.enum(TreeSymbol).optional(),
+  treeSymbol: z.enum(TreeSymbol).or(z.null()),
   position: z.enum(DwellerPosition),
 });
 
 export const WoodyPlantCardDtoSchema = z.object({
   name: z.string(),
   gameBox: z.enum(GameBox),
-  treeSymbol: z.enum(TreeSymbol).optional(),
+  treeSymbol: z.enum(TreeSymbol).or(z.null()),
   dwellers: z.array(DwellerCardDtoSchema),
 });
 
