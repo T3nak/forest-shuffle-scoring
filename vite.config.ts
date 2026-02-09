@@ -11,7 +11,7 @@ const commitHash = child
   .trim();
 
 export default defineConfig({
-  base: "/forest-shuffle-scoring",
+  base: "/",
   plugins: [
     react(),
     VitePWA({
